@@ -1,0 +1,5 @@
+[package]
+
+name = "simple-sexp"
+version = "0.0.1"
+authors = ["Corey Richardson <corey@octayn.net>"]
