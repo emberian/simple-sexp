@@ -125,8 +125,14 @@ impl<R: Iterator<char>> Parser<R> {
     }
 }
 
-pub fn parse(s: &str) -> Value {
+pub fn parse_str(s: &str) -> Value {
     let l = Lexer { stream: s.chars().peekable() };
+    let mut p = Parser { lexer: l.peekable(), stack: Vec::new() };
+    p.parse().unwrap()
+}
+
+pub fn parse<R: Iterator<char>>(iter: std::iter::Peekable<char, R>) -> Value {
+    let l = Lexer { stream: iter };
     let mut p = Parser { lexer: l.peekable(), stack: Vec::new() };
     p.parse().unwrap()
 }
