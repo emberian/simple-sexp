@@ -32,6 +32,7 @@ impl Show for Value {
 pub enum Token {
     LPAREN,
     RPAREN,
+    MINUS,
     NUM(f64),
     SYM(String),
     STR(String),
@@ -54,6 +55,7 @@ impl<R: Iterator<char>> Iterator<Token> for Lexer<R> {
                     match c {
                         '(' => return Some(LPAREN),
                         ')' => return Some(RPAREN),
+                        '-' => return Some(MINUS),
                         '"' => {
                             let mut res = String::new();
                             while self.stream.peek().map_or(false, |&c| c != '"') {
@@ -119,6 +121,13 @@ struct Parser<R> {
 }
 
 impl<R: Iterator<char>> Parser<R> {
+    fn expect_number(&mut self) -> f64 {
+        match self.lexer.next().unwrap() {
+            NUM(val) => return val,
+            tok => fail!("Expected number, found {}", tok),
+        }
+    }
+
     fn parse(&mut self) -> Option<Value> {
         match self.lexer.next() {
             None => return None,
@@ -127,6 +136,7 @@ impl<R: Iterator<char>> Parser<R> {
                     NUM(val) => return Some(Number(val)),
                     SYM(val) => return Some(Symbol(val)),
                     STR(val) => return Some(String_(val)),
+                    MINUS => return Some(Number(-self.expect_number())),
                     LPAREN => {
                         while self.lexer.peek().map_or(false, |tok| tok != &RPAREN) {
                             let mut st = Vec::new();
@@ -199,6 +209,13 @@ mod test {
     fn meow() {
         let expected = List(vec!(Symbol("meow".to_string()), List(vec!(Number(42.0)))));
         let real = parse_str("(meow (42))");
+        assert_eq!(expected, real);
+    }
+
+    #[test]
+    fn negative() {
+        let expected = Number(-42.0);
+        let real = parse_str("-42");
         assert_eq!(expected, real);
     }
 
