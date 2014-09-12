@@ -3,3 +3,6 @@
 name = "sexp"
 version = "0.0.1"
 authors = ["Corey Richardson <corey@octayn.net>"]
+
+[dev_dependencies.quickcheck]
+git = "https://github.com/BurntSushi/quickcheck"

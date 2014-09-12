@@ -164,12 +164,50 @@ pub fn parse<R: Iterator<char>>(iter: std::iter::Peekable<char, R>) -> Value {
 }
 
 #[cfg(test)]
+mod test {
+    extern crate quickcheck;
+
     use super::{Value, List, Symbol, Number, String_, parse_str};
+    use std::rand::Rng;
+    use self::quickcheck::{Gen, Arbitrary};
+
+    impl Arbitrary for Value {
+        fn arbitrary<G: Gen>(g: &mut G) -> Value {
+            match g.gen_range(0i, 4i) {
+                0 => {
+                    return List(Arbitrary::arbitrary(g));
+                },
+                1 => {
+                    let arb: String = Arbitrary::arbitrary(g);
+                    return Symbol(arb.as_slice().chars().filter(|c| super::is_ident(*c)).collect());
+                },
+                2 => {
+                    let arb: String = Arbitrary::arbitrary(g);
+                    return String_(arb.as_slice().chars().filter(|c| *c != '"').collect());
+                },
+                3 => {
+                    let arb: i32 = Arbitrary::arbitrary(g);
+                    // guaranteed correct stringification, won't need fuzzy equality
+                    return Number(arb as f64);
+                }
+                _ => unreachable!()
+            }
+        }
+    }
 
     #[test]
     fn meow() {
         let expected = List(vec!(Symbol("meow".to_string()), List(vec!(Number(42.0)))));
         let real = parse_str("(meow (42))");
         assert_eq!(expected, real);
+    }
+
+    #[test]
+    fn quick() {
+        // tests both correct stringification and that parsing is correct.
+        fn prop(val: Value) -> bool {
+            val == parse_str(val.to_string().as_slice())
+        }
+        quickcheck::quickcheck(prop);
     }
 }
