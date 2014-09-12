@@ -129,7 +129,13 @@ impl<R: Iterator<char>> Parser<R> {
                     STR(val) => return Some(String_(val)),
                     LPAREN => {
                         while self.lexer.peek().map_or(false, |tok| tok != &RPAREN) {
+                            let mut st = Vec::new();
+                            std::mem::swap(&mut self.stack, &mut st);
+
                             let next = self.parse().expect("Needed an element");
+
+                            std::mem::swap(&mut self.stack, &mut st);
+
                             self.stack.push(next);
                         }
                         assert_eq!(self.lexer.next().unwrap(), RPAREN);
@@ -155,4 +161,15 @@ pub fn parse<R: Iterator<char>>(iter: std::iter::Peekable<char, R>) -> Value {
     let l = Lexer { stream: iter };
     let mut p = Parser { lexer: l.peekable(), stack: Vec::new() };
     p.parse().unwrap()
+}
+
+#[cfg(test)]
+    use super::{Value, List, Symbol, Number, String_, parse_str};
+
+    #[test]
+    fn meow() {
+        let expected = List(vec!(Symbol("meow".to_string()), List(vec!(Number(42.0)))));
+        let real = parse_str("(meow (42))");
+        assert_eq!(expected, real);
+    }
 }
