@@ -1,9 +1,31 @@
-#[deriving(PartialOrd, PartialEq, Show)]
+use std::fmt::{Show, Formatter, Result};
+
+#[deriving(PartialOrd, PartialEq, Clone)]
 pub enum Value {
     List(Vec<Value>),
     Symbol(String),
     String_(String),
     Number(f64),
+}
+
+impl Show for Value {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match *self {
+            List(ref vals) => {
+                try!(write!(f, "("));
+                for (i, val) in vals.iter().enumerate() {
+                    try!(write!(f, "{}", val));
+                    if i + 1 != vals.len() {
+                        try!(write!(f, " "));
+                    }
+                }
+                write!(f, ")")
+            },
+            Symbol(ref val) => val.fmt(f),
+            String_(ref val) => write!(f, "\"{}\"", val),
+            Number(ref val) => val.fmt(f),
+        }
+    }
 }
 
 #[deriving(Show, PartialEq)]
