@@ -67,7 +67,7 @@ impl<R: Iterator<char>> Iterator<Token> for Lexer<R> {
                         c if is_ident(c) => {
                             let mut res = String::new();
                             res.push_char(c);
-                            while self.stream.peek().map_or(false, |&c| c.is_alphabetic()) {
+                            while self.stream.peek().map_or(false, |&c| c.is_alphabetic() || c == '-') {
                                 res.push_char(self.stream.next().unwrap());
                             }
                             return Some(SYM(res));
